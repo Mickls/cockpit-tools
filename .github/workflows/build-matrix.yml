@@ -7,21 +7,35 @@ on:
   pull_request:
     branches:
       - "main"
+      - "custom"
   push:
     branches:
       # Trusted default-branch builds seed caches readable by future tags.
       - "main"
+      - "custom"
       - "feature/build-matrix*"
       - "feature/build-matrix/**"
 
 concurrency:
   group: build-matrix-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/custom' }}
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  custom-integration:
+    name: Custom integration checks
+    if: always()
+    needs: [prepare, preflight-tests, preflight-ts-windows, build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require all platform builds and checks
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          node -e 'const jobs = JSON.parse(process.env.RESULTS); if (Object.values(jobs).some(job => job.result !== "success")) process.exit(1);'
+
   prepare:
     name: "🚦 Prepare shared build inputs"
     runs-on: ubuntu-latest
