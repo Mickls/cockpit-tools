@@ -171,7 +171,7 @@ jobs:
           - label: macOS arm64
             cache_target: "macos-aarch64"
             icon: "🍎"
-            platform: macos-15
+            platform: macos-15-xlarge
             target: aarch64-apple-darwin
             executable: target/aarch64-apple-darwin/ci/cockpit-tools
           - label: macOS x64
