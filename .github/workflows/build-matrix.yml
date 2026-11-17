@@ -165,13 +165,13 @@ jobs:
     permissions:
       contents: read
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         include:
           - label: macOS arm64
             cache_target: "macos-aarch64"
             icon: "🍎"
-            platform: macos-15-xlarge
+            platform: macos-15-intel
             target: aarch64-apple-darwin
             executable: target/aarch64-apple-darwin/ci/cockpit-tools
           - label: macOS x64
@@ -248,6 +248,20 @@ jobs:
       - name: "✅ Verify executable"
         shell: bash
         run: test -f "${{ matrix.executable }}"
+
+      - name: Verify macOS target architecture
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+          EXECUTABLE: ${{ matrix.executable }}
+        run: |
+          set -euo pipefail
+          case "$TARGET" in
+            aarch64-apple-darwin) lipo -verify_arch arm64 "$EXECUTABLE" ;;
+            x86_64-apple-darwin) lipo -verify_arch x86_64 "$EXECUTABLE" ;;
+            *) exit 1 ;;
+          esac
 
       - name: "🧾 Publish build summary"
         if: always()
