@@ -31,7 +31,7 @@
 - **THEN** 更新器 SHALL 查询 fork 自有地址，并用 fork 公钥验证清单
 
 #### Scenario: 缺少签名材料
-- **WHEN** 发布任务缺少必需的签名或公证凭据
+- **WHEN** 发布任务缺少必需的 Tauri 更新签名凭据
 - **THEN** 任务 SHALL 在发布产物前失败，且 SHALL 不在日志中暴露凭据值
 
 ### Requirement: 源码与产物完整性
@@ -61,3 +61,11 @@
 #### Scenario: 发布不完整
 - **WHEN** 任一产物、签名、清单或验证步骤失败
 - **THEN** 流程 SHALL 保留诊断，且 SHALL 不将该发布标记为公开完成
+
+### Requirement: 个人自用打包不依赖 Apple 签名
+
+个人自用构建 SHALL 不要求 Apple Developer ID 证书或公证凭据；安装包 SHALL 保留 Tauri 更新签名，并不得声称已通过 Apple 签名或公证。
+
+#### Scenario: 无 Apple 证书仍可构建
+- **WHEN** 个人自用工作流未配置任何 Apple 签名或公证密钥
+- **THEN** macOS 打包 SHALL 正常进行，只以 Tauri 更新签名和产物验证作为发布必需门槛

@@ -18,6 +18,8 @@ concurrency:
 
 jobs:
   prepare-release:
+    # The personal fork uses custom-release.yml without Apple credentials.
+    if: github.repository != 'Mickls/cockpit-tools'
     name: 📝 Prepare Staged Release
     runs-on: ubuntu-latest
     permissions:

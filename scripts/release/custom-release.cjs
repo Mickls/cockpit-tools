@@ -1,0 +1,99 @@
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const { execFileSync } = require('node:child_process');
+const { buildTargetManifests, TARGET_SPECS } = require('./build_target_latest_json.cjs');
+
+const REPO = 'Mickls/cockpit-tools';
+const TARGETS = Object.keys(TARGET_SPECS);
+function readJson(file) { return JSON.parse(fs.readFileSync(file, 'utf8')); }
+function writeJson(file, value) { fs.writeFileSync(file, JSON.stringify(value, null, 2) + '\n'); }
+function validateIdentity(identity) {
+  if (!/^2\.0\.\d+$/.test(identity.version) || !/^[a-f0-9]{40}$/.test(identity.commit)
+    || !/^[a-f0-9]{40}$/.test(identity.upstreamCommit) || !Number.isFinite(Date.parse(identity.publishedAt))) {
+    throw new Error('Invalid custom release identity');
+  }
+}
+function prepare(root, identity) {
+  validateIdentity(identity);
+  const pkgPath = path.join(root, 'package.json');
+  const pkg = readJson(pkgPath); pkg.version = identity.version; writeJson(pkgPath, pkg);
+  const lockPath = path.join(root, 'package-lock.json');
+  const lock = readJson(lockPath); lock.version = identity.version;
+  if (lock.packages?.['']) lock.packages[''].version = identity.version;
+  writeJson(lockPath, lock);
+  const confPath = path.join(root, 'src-tauri/tauri.conf.json');
+  const conf = readJson(confPath); conf.version = identity.version;
+  conf.bundle.macOS.signingIdentity = '-';
+  writeJson(confPath, conf);
+  const cargoPath = path.join(root, 'src-tauri/Cargo.toml');
+  fs.writeFileSync(cargoPath, fs.readFileSync(cargoPath, 'utf8').replace(/^version\s*=\s*"[^"]+"/m, `version = "${identity.version}"`));
+  writeJson(path.join(root, 'custom-release.json'), identity);
+  fs.writeFileSync(path.join(root, 'release-notes.md'),
+    `个人自用定制版本 ${identity.version}\n\n源码：${identity.commit}\n上游：${identity.upstreamVersion} (${identity.upstreamCommit})\n\nmacOS 未经 Apple 签名或公证；所有更新产物使用独立 Tauri 更新签名。\n`);
+}
+
+function verifySignature(data, signatureText, publicKeyText) {
+  const publicLines = Buffer.from(publicKeyText.trim(), 'base64').toString('utf8').trim().split(/\r?\n/);
+  const publicBytes = Buffer.from(publicLines[publicLines.length - 1], 'base64');
+  const lines = Buffer.from(signatureText.trim(), 'base64').toString('utf8').trim().split(/\r?\n/);
+  if (publicBytes.length !== 42 || lines.length !== 4 || !lines[2].startsWith('trusted comment: ')) throw new Error('Malformed update signature');
+  const sig = Buffer.from(lines[1], 'base64');
+  if (sig.length !== 74 || !sig.subarray(2, 10).equals(publicBytes.subarray(2, 10))) throw new Error('Update key mismatch');
+  const algorithm = sig.subarray(0, 2).toString();
+  if (!['Ed', 'ED'].includes(algorithm)) throw new Error('Unsupported update signature');
+  const key = crypto.createPublicKey({ key: Buffer.concat([Buffer.from('302a300506032b6570032100', 'hex'), publicBytes.subarray(10)]), format: 'der', type: 'spki' });
+  const message = algorithm === 'ED' ? crypto.createHash('blake2b512').update(data).digest() : data;
+  if (!crypto.verify(null, message, key, sig.subarray(10))) throw new Error('Invalid artifact signature');
+  const trusted = Buffer.from(lines[2].slice('trusted comment: '.length));
+  if (!crypto.verify(null, Buffer.concat([sig.subarray(10), trusted]), key, Buffer.from(lines[3], 'base64'))) throw new Error('Invalid signature comment');
+}
+
+function aggregate(root, identity) {
+  validateIdentity(identity);
+  const assets = path.join(root, 'release-assets');
+  const files = fs.readdirSync(assets);
+  const conf = readJson(path.join(root, 'src-tauri/tauri.conf.json'));
+  // Require every platform and provenance before creating any release.
+  for (const target of TARGETS) {
+    const matches = files.filter(f => TARGET_SPECS[target].test(f));
+    if (matches.length !== 1) throw new Error(`Missing or ambiguous target: ${target}`);
+    const name = matches[0];
+    verifySignature(fs.readFileSync(path.join(assets, name)), fs.readFileSync(path.join(assets, name + '.sig'), 'utf8'), conf.plugins.updater.pubkey);
+  }
+  const provenance = files.filter(f => /^provenance-.*\.json$/.test(f)).map(f => readJson(path.join(assets, f)));
+  const expected = ['aarch64-apple-darwin', 'x86_64-apple-darwin', 'universal-apple-darwin',
+    'x86_64-pc-windows-msvc', 'x86_64-unknown-linux-gnu', 'aarch64-unknown-linux-gnu'];
+  if (provenance.length !== expected.length || expected.some(target => !provenance.some(p => p.target === target))
+    || provenance.some(p => p.commit !== identity.commit || p.version !== identity.version)) throw new Error('Mixed or missing platform provenance');
+  const universal = files.filter(f => /_universal\.app\.tar\.gz$/.test(f));
+  if (universal.length !== 1) throw new Error('Missing universal app');
+  verifySignature(fs.readFileSync(path.join(assets, universal[0])), fs.readFileSync(path.join(assets, universal[0] + '.sig'), 'utf8'), conf.plugins.updater.pubkey);
+  buildTargetManifests({ version: identity.version, repo: REPO, assetsDir: assets,
+    notesFile: path.join(root, 'release-notes.md'), publishedAt: identity.publishedAt, outputDir: assets, targets: TARGETS });
+  execFileSync(process.execPath, [path.join(__dirname, 'build_merged_latest_json.cjs'),
+    '--version', identity.version, '--repo', REPO, '--assets-dir', assets,
+    '--notes-file', path.join(root, 'release-notes.md'), '--published-at', identity.publishedAt,
+    '--output', path.join(assets, 'latest.json')]);
+  writeJson(path.join(assets, 'custom-release.json'), identity);
+  const sums = fs.readdirSync(assets).filter(f => f !== 'SHA256SUMS.txt').sort().map(f =>
+    `${crypto.createHash('sha256').update(fs.readFileSync(path.join(assets, f))).digest('hex')}  ${f}`);
+  fs.writeFileSync(path.join(assets, 'SHA256SUMS.txt'), sums.join('\n') + '\n');
+}
+
+function main() {
+  const mode = process.argv[2]; const root = process.cwd();
+  if (mode === 'identity') {
+    const git = (...args) => execFileSync('git', args, { encoding: 'utf8' }).trim();
+    const identity = { version: `2.0.${git('rev-list', '--first-parent', '--count', 'HEAD')}`,
+      commit: git('rev-parse', 'HEAD'), upstreamCommit: git('merge-base', 'HEAD', 'origin/main'),
+      upstreamVersion: readJson('package.json').version,
+      publishedAt: git('show', '-s', '--format=%cI', 'HEAD') };
+    validateIdentity(identity); writeJson('custom-release.json', identity);
+    fs.appendFileSync(process.env.GITHUB_OUTPUT, `version=${identity.version}\ncommit=${identity.commit}\n`);
+  } else if (mode === 'prepare') prepare(root, readJson('custom-release.json'));
+  else if (mode === 'aggregate') aggregate(root, readJson('custom-release.json'));
+  else throw new Error('Unknown custom release command');
+}
+module.exports = { prepare, aggregate, validateIdentity, verifySignature, TARGETS };
+if (require.main === module) main();
