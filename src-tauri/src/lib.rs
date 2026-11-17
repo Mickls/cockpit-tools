@@ -922,6 +922,8 @@ pub fn run() {
             modules::codex_pelican_preview::codex_pelican_preview,
             modules::codex_pelican_preview::codex_pelican_browser,
             // Account Commands
+            commands::codex_credential_sync::codex_credential_sync_load,
+            commands::codex_credential_sync::codex_credential_sync_save,
             commands::account::list_accounts,
             commands::account::add_account,
             commands::account::create_pending_oauth_account,
