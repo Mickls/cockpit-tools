@@ -171,13 +171,13 @@ jobs:
           - label: macOS arm64
             cache_target: "macos-aarch64"
             icon: "🍎"
-            platform: macos-latest
+            platform: macos-15
             target: aarch64-apple-darwin
             executable: target/aarch64-apple-darwin/ci/cockpit-tools
           - label: macOS x64
             cache_target: "macos-x86_64"
             icon: "🍎"
-            platform: macos-latest
+            platform: macos-15-intel
             target: x86_64-apple-darwin
             executable: target/x86_64-apple-darwin/ci/cockpit-tools
           - label: Ubuntu 22.04 x64
