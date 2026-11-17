@@ -18,6 +18,15 @@ function changelogSection(text, version) {
 }
 function collectNotes(root, identity) {
   const git = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim();
+  // Reuse the snapshot from an existing release on reruns, including partial
+  // uploads. Advancing latest must not rewrite an older build's notes.
+  const existing = spawnSync('gh', ['api', `repos/Mickls/cockpit-tools/releases/tags/v${identity.version}`], { cwd: root, encoding: 'utf8' });
+  if (existing.status === 0) {
+    const pinned = JSON.parse(existing.stdout);
+    if (pinned.target_commitish !== identity.commit || !pinned.body?.trim()) throw new Error('Existing release notes/source mismatch');
+    return pinned.body;
+  }
+  if (!existing.stderr.includes('HTTP 404')) throw new Error('Could not inspect existing release notes');
   const official = (file) => git('show', `${identity.upstreamCommit}:${file}`);
   const version = JSON.parse(official('package.json')).version;
   let upstream;
@@ -32,7 +41,11 @@ function collectNotes(root, identity) {
     git('fetch', 'origin', `refs/tags/${tag}`);
     base = git('rev-parse', 'FETCH_HEAD^{commit}');
     const ancestor = spawnSync('git', ['merge-base', '--is-ancestor', base, identity.commit], { cwd: root });
-    if (ancestor.status !== 0) throw new Error('Latest release is not an ancestor of this build');
+    if (ancestor.status !== 0) {
+      const newer = spawnSync('git', ['merge-base', '--is-ancestor', identity.commit, base], { cwd: root });
+      if (newer.status !== 0) throw new Error('Release histories diverged');
+      base = identity.commit;
+    }
   } else if (!previous.stderr.includes('HTTP 404')) {
     throw new Error('Could not determine the previous release; refusing incomplete notes');
   }
