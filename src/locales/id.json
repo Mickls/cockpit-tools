@@ -6613,6 +6613,10 @@
       "more": "Tampilkan lagi",
       "loadFailed": "Gagal memuat riwayat",
       "officialUnavailable": "Riwayat reset resmi tidak tersedia untuk akun ini"
+    },
+    "credentialSync": {
+      "title": "Sinkronisasi kredensial Codex",
+      "desc": "Pulihkan otorisasi di perangkat pribadi Anda. Server hanya menyimpan data terenkripsi; pembaruan token rutin tidak diunggah."
     }
   },
   "codebuddy": {

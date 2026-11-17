@@ -6566,6 +6566,10 @@
       "more": "載入更多",
       "loadFailed": "讀取記錄失敗",
       "officialUnavailable": "此帳號不支援官方重設歷史"
+    },
+    "credentialSync": {
+      "title": "Codex 憑證同步",
+      "desc": "個人多裝置授權復原；伺服器只儲存加密資料。一般 Token 更新不會上傳。"
     }
   },
   "githubCopilot": {

@@ -6808,6 +6808,10 @@
       "more": "加载更多",
       "loadFailed": "读取记录失败",
       "officialUnavailable": "此账号不支持官方重置历史"
+    },
+    "credentialSync": {
+      "title": "Codex 凭据同步",
+      "desc": "个人多设备授权恢复；服务器只保存加密数据。普通 Token 刷新不会上传。"
     }
   },
   "codebuddy": {

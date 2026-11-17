@@ -6566,6 +6566,10 @@
       "more": "Mostra altro",
       "loadFailed": "Impossibile caricare la cronologia",
       "officialUnavailable": "La cronologia ufficiale dei ripristini non è disponibile per questo account"
+    },
+    "credentialSync": {
+      "title": "Sincronizzazione credenziali Codex",
+      "desc": "Ripristina l’autorizzazione tra i tuoi dispositivi. Il server conserva solo dati crittografati; i normali rinnovi dei token non vengono caricati."
     }
   },
   "githubCopilot": {

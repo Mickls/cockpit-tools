@@ -6566,6 +6566,10 @@
       "more": "더 보기",
       "loadFailed": "기록을 불러오지 못했습니다",
       "officialUnavailable": "이 계정은 공식 초기화 기록을 지원하지 않습니다"
+    },
+    "credentialSync": {
+      "title": "Codex 인증 정보 동기화",
+      "desc": "개인 기기 간 인증을 복구합니다. 서버에는 암호화된 데이터만 저장하며 일반 토큰 갱신은 업로드하지 않습니다."
     }
   },
   "githubCopilot": {

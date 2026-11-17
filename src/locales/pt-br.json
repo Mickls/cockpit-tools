@@ -6566,6 +6566,10 @@
       "more": "Mostrar mais",
       "loadFailed": "Não foi possível carregar o histórico",
       "officialUnavailable": "O histórico oficial de redefinições não está disponível para esta conta"
+    },
+    "credentialSync": {
+      "title": "Sincronização de credenciais do Codex",
+      "desc": "Recupere a autorização entre seus dispositivos. O servidor armazena apenas dados criptografados; renovações comuns de tokens não são enviadas."
     }
   },
   "githubCopilot": {

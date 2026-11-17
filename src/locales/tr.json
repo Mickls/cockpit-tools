@@ -6566,6 +6566,10 @@
       "more": "Daha fazla",
       "loadFailed": "Geçmiş yüklenemedi",
       "officialUnavailable": "Bu hesap için resmî sıfırlama geçmişi kullanılamıyor"
+    },
+    "credentialSync": {
+      "title": "Codex kimlik bilgisi eşitleme",
+      "desc": "Kişisel cihazlarınız arasında yetkilendirmeyi kurtarın. Sunucu yalnızca şifrelenmiş veri saklar; normal token yenilemeleri yüklenmez."
     }
   },
   "githubCopilot": {

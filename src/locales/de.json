@@ -6566,6 +6566,10 @@
       "more": "Mehr anzeigen",
       "loadFailed": "Verlauf konnte nicht geladen werden",
       "officialUnavailable": "Für dieses Konto ist kein offizieller Reset-Verlauf verfügbar"
+    },
+    "credentialSync": {
+      "title": "Codex-Anmeldedaten synchronisieren",
+      "desc": "Anmeldung auf eigenen Geräten wiederherstellen. Der Server speichert nur verschlüsselte Daten; normale Token-Aktualisierungen werden nicht hochgeladen."
     }
   },
   "githubCopilot": {

@@ -6566,6 +6566,10 @@
       "more": "Ver más",
       "loadFailed": "No se pudo cargar el historial",
       "officialUnavailable": "El historial oficial de reinicios no está disponible para esta cuenta"
+    },
+    "credentialSync": {
+      "title": "Sincronización de credenciales de Codex",
+      "desc": "Recupera la autorización entre tus dispositivos. El servidor solo guarda datos cifrados; las renovaciones habituales de tokens no se suben."
     }
   },
   "githubCopilot": {

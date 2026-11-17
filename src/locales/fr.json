@@ -6566,6 +6566,10 @@
       "more": "Afficher plus",
       "loadFailed": "Impossible de charger l’historique",
       "officialUnavailable": "L’historique officiel des resets est indisponible pour ce compte"
+    },
+    "credentialSync": {
+      "title": "Synchronisation des identifiants Codex",
+      "desc": "Restaurez l’autorisation entre vos appareils. Le serveur ne conserve que des données chiffrées ; les renouvellements ordinaires des jetons ne sont pas envoyés."
     }
   },
   "githubCopilot": {

@@ -6566,6 +6566,10 @@
       "more": "Pokaż więcej",
       "loadFailed": "Nie udało się wczytać historii",
       "officialUnavailable": "Oficjalna historia resetów jest niedostępna dla tego konta"
+    },
+    "credentialSync": {
+      "title": "Synchronizacja danych logowania Codex",
+      "desc": "Przywracaj autoryzację na swoich urządzeniach. Serwer przechowuje tylko zaszyfrowane dane; zwykłe odświeżenia tokenów nie są wysyłane."
     }
   },
   "githubCopilot": {
