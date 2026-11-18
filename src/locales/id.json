@@ -6616,7 +6616,10 @@
     },
     "credentialSync": {
       "title": "Sinkronisasi kredensial Codex",
-      "desc": "Pulihkan otorisasi di perangkat pribadi Anda. Server hanya menyimpan data terenkripsi; pembaruan token rutin tidak diunggah."
+      "desc": "Pulihkan otorisasi di perangkat pribadi Anda. Server hanya menyimpan data terenkripsi; pembaruan token rutin tidak diunggah.",
+      "pending": "Unggahan tertunda: {{count}}",
+      "enrollment": "Kode pendaftaran",
+      "enroll": "Daftarkan perangkat"
     }
   },
   "codebuddy": {

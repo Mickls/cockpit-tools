@@ -6569,7 +6569,10 @@
     },
     "credentialSync": {
       "title": "Sincronização de credenciais do Codex",
-      "desc": "Recupere a autorização entre seus dispositivos. O servidor armazena apenas dados criptografados; renovações comuns de tokens não são enviadas."
+      "desc": "Recupere a autorização entre seus dispositivos. O servidor armazena apenas dados criptografados; renovações comuns de tokens não são enviadas.",
+      "pending": "Uploads pendentes: {{count}}",
+      "enrollment": "Código de inscrição",
+      "enroll": "Registrar dispositivo"
     }
   },
   "githubCopilot": {

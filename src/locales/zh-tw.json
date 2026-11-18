@@ -6569,7 +6569,10 @@
     },
     "credentialSync": {
       "title": "Codex 憑證同步",
-      "desc": "個人多裝置授權復原；伺服器只儲存加密資料。一般 Token 更新不會上傳。"
+      "desc": "個人多裝置授權復原；伺服器只儲存加密資料。一般 Token 更新不會上傳。",
+      "pending": "待上傳帳號：{{count}}",
+      "enrollment": "輸入裝置登記碼",
+      "enroll": "登記裝置"
     }
   },
   "githubCopilot": {

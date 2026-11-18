@@ -6569,7 +6569,10 @@
     },
     "credentialSync": {
       "title": "Synchronizace přihlašovacích údajů Codex",
-      "desc": "Obnova přihlášení mezi vlastními zařízeními. Server ukládá pouze šifrovaná data; běžné obnovení tokenu se neodesílá."
+      "desc": "Obnova přihlášení mezi vlastními zařízeními. Server ukládá pouze šifrovaná data; běžné obnovení tokenu se neodesílá.",
+      "pending": "Čekající nahrání: {{count}}",
+      "enrollment": "Registrační kód",
+      "enroll": "Zaregistrovat zařízení"
     }
   },
   "githubCopilot": {

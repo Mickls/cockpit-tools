@@ -6811,7 +6811,10 @@
     },
     "credentialSync": {
       "title": "Codex 凭据同步",
-      "desc": "个人多设备授权恢复；服务器只保存加密数据。普通 Token 刷新不会上传。"
+      "desc": "个人多设备授权恢复；服务器只保存加密数据。普通 Token 刷新不会上传。",
+      "pending": "待上传账号：{{count}}",
+      "enrollment": "输入设备登记码",
+      "enroll": "登记设备"
     }
   },
   "codebuddy": {

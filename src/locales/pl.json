@@ -6569,7 +6569,10 @@
     },
     "credentialSync": {
       "title": "Synchronizacja danych logowania Codex",
-      "desc": "Przywracaj autoryzację na swoich urządzeniach. Serwer przechowuje tylko zaszyfrowane dane; zwykłe odświeżenia tokenów nie są wysyłane."
+      "desc": "Przywracaj autoryzację na swoich urządzeniach. Serwer przechowuje tylko zaszyfrowane dane; zwykłe odświeżenia tokenów nie są wysyłane.",
+      "pending": "Oczekujące wysyłanie: {{count}}",
+      "enrollment": "Kod rejestracji",
+      "enroll": "Zarejestruj urządzenie"
     }
   },
   "githubCopilot": {

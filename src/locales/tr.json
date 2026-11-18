@@ -6569,7 +6569,10 @@
     },
     "credentialSync": {
       "title": "Codex kimlik bilgisi eşitleme",
-      "desc": "Kişisel cihazlarınız arasında yetkilendirmeyi kurtarın. Sunucu yalnızca şifrelenmiş veri saklar; normal token yenilemeleri yüklenmez."
+      "desc": "Kişisel cihazlarınız arasında yetkilendirmeyi kurtarın. Sunucu yalnızca şifrelenmiş veri saklar; normal token yenilemeleri yüklenmez.",
+      "pending": "Bekleyen yüklemeler: {{count}}",
+      "enrollment": "Kayıt kodu",
+      "enroll": "Cihazı kaydet"
     }
   },
   "githubCopilot": {
