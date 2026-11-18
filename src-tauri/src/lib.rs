@@ -924,6 +924,7 @@ pub fn run() {
             // Account Commands
             commands::codex_credential_sync::codex_credential_sync_load,
             commands::codex_credential_sync::codex_credential_sync_save,
+            commands::codex_credential_sync::codex_credential_sync_device_public_key,
             commands::account::list_accounts,
             commands::account::add_account,
             commands::account::create_pending_oauth_account,

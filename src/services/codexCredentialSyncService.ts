@@ -10,4 +10,5 @@ export interface CodexCredentialSyncSettings {
 }
 export const loadCodexCredentialSyncSettings = () => invoke<CodexCredentialSyncSettings>('codex_credential_sync_load');
 export const saveCodexCredentialSyncSettings = (settings: CodexCredentialSyncSettings) => invoke<CodexCredentialSyncSettings>('codex_credential_sync_save', { settings });
+export const getCodexCredentialSyncDevicePublicKey = () => invoke<string>('codex_credential_sync_device_public_key');
 export function normalizeCodexCredentialSyncUrl(value: string): string { return value.trim().replace(/\/+$/, ''); }
