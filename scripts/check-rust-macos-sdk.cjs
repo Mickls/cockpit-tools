@@ -19,7 +19,8 @@ else
   exec /usr/bin/xcrun "$@"
 fi
 `, { mode: 0o700 });
-  const result = spawnSync('cargo', ['check', '--manifest-path', 'src-tauri/Cargo.toml'], {
+  const cargoArgs = process.argv.slice(3);
+  const result = spawnSync('cargo', cargoArgs.length ? cargoArgs : ['check', '--manifest-path', 'src-tauri/Cargo.toml'], {
     cwd: path.resolve(__dirname, '..'), stdio: 'inherit',
     env: { ...process.env, COCKPIT_CHECK_SDK: path.resolve(sdk), PATH: wrapperDir + path.delimiter + process.env.PATH },
   });

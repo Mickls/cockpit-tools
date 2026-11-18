@@ -16,7 +16,9 @@ fn fingerprint(a:&CodexAccount)->String{format!("{:x}",Sha256::digest(serde_json
 fn account_key(a:&CodexAccount)->Result<String,String>{Ok(crypto::account_key(&sdk::keys(&sdk::secret()?)?,&accounts::credential_sync_identity(a)?))}
 fn status(id:&str,message:&str){let _=update_settings(|s|{if s.recovery_status.len()>128{s.recovery_status.clear();}s.recovery_status.insert(id.into(),message.into());});}
 pub(super) fn clear_recovery_epoch(id:&str){if let Ok(mut ids)=ATTEMPTS.lock(){ids.remove(id);}}
-pub fn start_worker(){if STARTED.swap(true,Ordering::SeqCst){return;}tauri::async_runtime::spawn(async{
+pub fn start_worker(){
+ #[cfg(test)] { return; }
+ if STARTED.swap(true,Ordering::SeqCst){return;}tauri::async_runtime::spawn(async{
  loop{
   if let Ok(settings)=load(){if settings.enabled&&!settings.server_url.is_empty(){
    if settings.device_id.is_some(){
@@ -45,7 +47,7 @@ async fn cycle()->Result<(),String>{
  update_settings(|s|{s.last_sync_at=Some(chrono::Utc::now().timestamp());s.last_error=None;})?;Ok(())
 }
 fn remove_queued(id:&str,generation:u64)->Result<(),String>{update_settings(|s|s.pending_uploads.retain(|p|p.account_id!=id||p.token_generation!=generation))?;Ok(())}
-async fn upload(account:&CodexAccount)->Result<(),String>{
+pub(super) async fn upload(account:&CodexAccount)->Result<(),String>{
  let key=account_key(account)?;let path=format!("/v1/accounts/{key}/backup");
  let revision=match sdk::call(Method::GET,&format!("/v1/accounts/{key}/backup-meta"),None).await{Ok(v)=>v["revision"].as_i64().ok_or("备份版本缺失")?,Err(e)if e.contains("HTTP 404")=>0,Err(e)=>return Err(e)};
  let snapshot=accounts::credential_sync_snapshot(&account.id,false)?;

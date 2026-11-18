@@ -51,7 +51,16 @@ pub fn load_or_create_device_signing_key()->Result<SigningKey,String>{
 }
 pub fn device_id(key:&SigningKey)->String{format!("device_{}",base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(&sha2::Sha256::digest(key.verifying_key().as_bytes())[..12]))}
 pub fn enqueue_upload(account_id:&str,generation:u64)->Result<CodexCredentialSyncSettings,String>{
- let result=update_settings(|s|{if !s.enabled||s.server_url.is_empty(){return;}s.pending_uploads.retain(|p|p.account_id!=account_id);s.pending_uploads.push(CodexCredentialSyncPendingUpload{account_id:account_id.into(),token_generation:generation,queued_at:chrono::Utc::now().timestamp()});if s.pending_uploads.len()>64{s.pending_uploads.remove(0);}})?;start_worker();Ok(result)
+ let result={let _g=SETTINGS_LOCK.lock().map_err(|_|"同步配置锁不可用")?;let mut s=read_settings()?;
+  if !s.enabled||s.server_url.is_empty(){return Ok(s);}
+  s.pending_uploads.retain(|p|p.account_id!=account_id);
+  if s.pending_uploads.len()>=2048{return Err("凭据上传队列已满，保留现有任务，请稍后手动上传".into());}
+  s.pending_uploads.push(CodexCredentialSyncPendingUpload{account_id:account_id.into(),token_generation:generation,queued_at:chrono::Utc::now().timestamp()});
+  let value=serde_json::to_string_pretty(&s).map_err(|_|"同步队列编码失败")?;
+  crate::modules::atomic_write::write_string_atomic(&path()?,&value).map_err(|_|"同步队列保存失败")?;s
+ };start_worker();Ok(result)
 }
 
 pub fn authorization_succeeded(account_id:&str,generation:u64)->Result<CodexCredentialSyncSettings,String>{worker::clear_recovery_epoch(account_id);enqueue_upload(account_id,generation)}
+
+#[cfg(test)]#[path="credential_sync/integration.rs"]mod integration;

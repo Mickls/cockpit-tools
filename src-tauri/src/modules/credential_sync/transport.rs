@@ -28,7 +28,7 @@ pub async fn request(server:&str,device:&str,key:&SigningKey,method:Method,path:
 }
 pub async fn enroll(server:&str,code:&str,device_id:&str,public_key:&str,box_public_key:&str)->Result<Value,String>{
     let body=serde_json::json!({"code":code,"device_id":device_id,"public_key":public_key,"box_public_key":box_public_key});
-    let response=client(server)?.post(format!("{}/v1/enroll",server.trim_end_matches('/'))).json(&body).send().await.map_err(|_|"设备登记请求失败")?;
+    let response=client(server)?.post(format!("{}/v1/enroll",server.trim_end_matches('/'))).json(&body).send().await.map_err(|e|format!("设备登记连接失败: {}",diagnostic(&e)))?;
     let status=response.status();if !status.is_success(){return Err(format!("设备登记返回 HTTP {}",status.as_u16()));}
     response.json().await.map_err(|_|"设备登记响应格式无效".into())
 }
@@ -43,4 +43,11 @@ pub async fn recover_enrollment(server:&str,body:Value)->Result<Value,String>{
  if !response.status().is_success(){return Err(format!("恢复登记 HTTP {}",response.status().as_u16()));}
  if response.content_length().is_some_and(|n|n>131072){return Err("恢复响应超过大小限制".into());}
  response.json().await.map_err(|_|"恢复登记响应无效".into())
+}
+
+fn diagnostic(error:&reqwest::Error)->String{
+ use std::error::Error;
+ let mut parts=Vec::new();let mut source=error.source();
+ while let Some(value)=source{parts.push(value.to_string());source=value.source();if parts.len()>=4{break;}}
+ if parts.is_empty(){if error.is_timeout(){"请求超时".into()}else{"请求无法建立连接".into()}}else{parts.join("; ")}
 }

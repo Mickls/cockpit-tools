@@ -10,7 +10,7 @@ use std::{collections::BTreeMap,fs,path::PathBuf,sync::Mutex};
 static SECRET_LOCK:Mutex<()>=Mutex::new(());
 #[derive(Clone,Serialize,Deserialize)]
 pub struct SecretState {
- pub box_secret:[u8;32],pub keys:Option<Vec<u8>>,pub epoch:i64,
+ pub box_secret:[u8;32],pub keys:Option<Vec<u8>>,pub epoch:i64,#[serde(default)]pub version:u64,
  pub trusted:BTreeMap<String,String>,pub pending:Option<Pending>,
  #[serde(default)]pub recovery:Option<RecoveryPublic>,#[serde(default)]pub recovery_private:Option<[u8;32]>,
 }
@@ -27,7 +27,7 @@ pub fn secret()->Result<SecretState,String>{
   Ok(s)=>crate::modules::secure_account_storage::deserialize_encrypted_snapshot(&s),
   Err(e) if e.kind()==std::io::ErrorKind::NotFound=>{
    let mut box_secret=[0;32];rand::rngs::OsRng.fill_bytes(&mut box_secret);
-   let state=SecretState{box_secret,keys:None,epoch:1,trusted:BTreeMap::new(),pending:None,recovery:None,recovery_private:None};write_secret(&state)?;Ok(state)
+   let state=SecretState{box_secret,keys:None,epoch:1,version:0,trusted:BTreeMap::new(),pending:None,recovery:None,recovery_private:None};write_secret(&state)?;Ok(state)
   },Err(_)=>Err("无法读取同步密钥，未生成替代密钥".into())
  }
 }
@@ -35,7 +35,13 @@ fn write_secret(state:&SecretState)->Result<(),String>{
  let text=crate::modules::secure_account_storage::serialize_account_file("codex-sync-vault",state)?;
  crate::modules::atomic_write::write_string_atomic(&secret_path()?,&text).map_err(|_|"同步密钥保存失败".into())
 }
-pub fn store_secret(state:&SecretState)->Result<(),String>{let _g=SECRET_LOCK.lock().map_err(|_|"同步密钥锁不可用")?;write_secret(state)}
+pub fn store_secret(state:&SecretState)->Result<(),String>{
+ let _g=SECRET_LOCK.lock().map_err(|_|"同步密钥锁不可用")?;
+ let current=fs::read_to_string(secret_path()?).map_err(|_|"无法校验同步密钥状态")?;
+ let current:SecretState=crate::modules::secure_account_storage::deserialize_encrypted_snapshot(&current)?;
+ if current.version!=state.version{return Err("同步密钥状态已变化，请重试操作".into());}
+ let mut next=state.clone();next.version=next.version.checked_add(1).ok_or("同步密钥状态版本已耗尽")?;write_secret(&next)
+}
 pub fn keys(state:&SecretState)->Result<crypto::VaultKeys,String>{let b=state.keys.as_ref().ok_or("请先完成设备配对")?;if b.len()!=64{return Err("同步库密钥无效".into());}Ok(crypto::VaultKeys{content:b[..32].try_into().unwrap(),lookup:b[32..].try_into().unwrap()})}
 pub fn ready()->bool{load().ok().is_some_and(|s|s.enabled&&s.vault_id.is_some())&&secret().ok().is_some_and(|s|s.keys.is_some())}
 pub async fn call(method:Method,path:&str,body:Option<Value>)->Result<Value,String>{let settings=load()?;if !settings.enabled{return Err("凭据同步已关闭".into());}let key=load_or_create_device_signing_key()?;transport::request(&settings.server_url,&device_id(&key),&key,method,path,body).await}
@@ -76,7 +82,7 @@ pub async fn approve(pairing_id:String)->Result<(),String>{
  let mut cert=Certificate{issuer:device_id(&signing),member,public_key:public,box_public_key:enc,vault:load()?.vault_id.ok_or("同步库未初始化")?,pairing:pairing_id.clone(),wrapped_hash:format!("{:x}",Sha256::digest(&wrapped)),signature:String::new()};
  cert.signature=STANDARD.encode(signing.sign(&cert_bytes(&cert)?).to_bytes());
  call(Method::POST,&format!("/v1/pairings/{pairing_id}/approve"),Some(json!({"encrypted_key_wrap":STANDARD.encode(&wrapped),"membership_signature":serde_json::to_string(&cert).map_err(|_|"配对证明编码失败")?}))).await?;
- store_secret(&state)
+ let mut latest=secret()?;latest.trusted.insert(cert.member,cert.public_key);store_secret(&latest)
 }
 pub async fn finish_pairing()->Result<bool,String>{
  let mut state=secret()?;let Some(pending)=state.pending.clone()else{return Ok(state.keys.is_some());};let config=load()?;let key=load_or_create_device_signing_key()?;
@@ -92,14 +98,16 @@ pub async fn finish_pairing()->Result<bool,String>{
 }
 pub async fn devices()->Result<Value,String>{
  let value=call(Method::GET,"/v1/devices",None).await?;let mut state=secret()?;
- let items=value["devices"].as_array().ok_or("设备列表无效")?;
- for _ in 0..items.len(){for item in items{
+ let items=value["devices"].as_array().ok_or("设备列表无效")?;let vault=load()?.vault_id.ok_or("同步库未配置")?;let mut changed=false;
+ for _ in 0..items.len().min(64){let mut added=false;for item in items{
   if item["revoked"].as_bool()==Some(true){continue;}
   let Some(text)=item["certificate"].as_str()else{continue};let Ok(cert)=serde_json::from_str::<Certificate>(text)else{continue};
-  if cert.vault!=load()?.vault_id.as_deref().unwrap_or("")||item["device_id"].as_str()!=Some(&cert.member)||item["public_key"].as_str()!=Some(&cert.public_key){continue;}
-  if let Some(issuer)=if cert.issuer=="recovery"{state.recovery.as_ref().map(|r|&r.signing_key)}else{state.trusted.get(&cert.issuer)}{if verify_cert(&cert,issuer).is_ok(){state.trusted.insert(cert.member,cert.public_key);}}
- }}
- store_secret(&state)?;Ok(value)
+  if cert.vault!=vault||item["device_id"].as_str()!=Some(&cert.member)||item["public_key"].as_str()!=Some(&cert.public_key){continue;}
+  if state.trusted.contains_key(&cert.member){continue;}
+  let issuer=if cert.issuer=="recovery"{state.recovery.as_ref().map(|r|r.signing_key.clone())}else{state.trusted.get(&cert.issuer).cloned()};
+  if let Some(issuer)=issuer{if verify_cert(&cert,&issuer).is_ok(){state.trusted.insert(cert.member,cert.public_key);added=true;changed=true;}}
+ }if !added{break;}}
+ if changed{store_secret(&state)?;}Ok(value)
 }
 pub fn trusted_key(sender:&str)->Result<VerifyingKey,String>{let state=secret()?;public_key(state.trusted.get(sender).ok_or("候选设备未经本机信任链验证")?)}
 pub async fn revoke(target:String)->Result<(),String>{
@@ -171,7 +179,8 @@ pub async fn export_recovery()->Result<String,String>{
 }
 pub async fn refresh_recovery()->Result<(),String>{
  let mut state=secret()?;
- let response=match call(Method::GET,"/v1/vault/recovery",None).await{Ok(v)=>v,Err(e)if e.contains("HTTP 404")=>return Ok(()),Err(e)=>return Err(e)};
+ let response=match call(Method::GET,"/v1/vault/recovery",None).await{Ok(v)=>v,Err(e)if e.contains("HTTP 404")=>{if state.recovery.is_some(){publish_recovery(&state).await?;}return Ok(())},Err(e)=>return Err(e)};
+ if state.recovery.is_some()&&response["key_epoch"].as_i64().is_some_and(|e|e<state.epoch){return publish_recovery(&state).await;}
  let cert:Certificate=serde_json::from_str(response["certificate"].as_str().ok_or("恢复证明缺失")?).map_err(|_|"恢复证明无效")?;
  verify_cert(&cert,state.trusted.get(&cert.issuer).ok_or("恢复证明设备未经信任")?)?;
  if cert.vault!=load()?.vault_id.as_deref().unwrap_or("")||cert.member!="recovery"||Some(cert.public_key.as_str())!=response["signing_key"].as_str()||Some(cert.box_public_key.as_str())!=response["public_key"].as_str(){return Err("恢复公钥绑定无效".into());}
