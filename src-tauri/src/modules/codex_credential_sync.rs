@@ -8,7 +8,7 @@ use std::{fs,path::PathBuf,sync::Mutex};
 #[path="credential_sync/transport.rs"]mod transport;
 #[path="credential_sync/sdk.rs"]mod sdk;
 #[path="credential_sync/worker.rs"]mod worker;
-pub use sdk::{register as enroll,invite,pairings,approve,finish_pairing,devices};
+pub use sdk::{register as enroll,invite,pairings,approve,finish_pairing,devices,revoke,export_recovery,restore_recovery};
 pub use worker::{start_worker,manual_upload,manual_sync,recover_if_authorized_failure};
 static SETTINGS_LOCK:Mutex<()>=Mutex::new(());
 static DEVICE_LOCK:Mutex<()>=Mutex::new(());
@@ -53,3 +53,5 @@ pub fn device_id(key:&SigningKey)->String{format!("device_{}",base64::engine::ge
 pub fn enqueue_upload(account_id:&str,generation:u64)->Result<CodexCredentialSyncSettings,String>{
  let result=update_settings(|s|{if !s.enabled||s.server_url.is_empty(){return;}s.pending_uploads.retain(|p|p.account_id!=account_id);s.pending_uploads.push(CodexCredentialSyncPendingUpload{account_id:account_id.into(),token_generation:generation,queued_at:chrono::Utc::now().timestamp()});if s.pending_uploads.len()>64{s.pending_uploads.remove(0);}})?;start_worker();Ok(result)
 }
+
+pub fn authorization_succeeded(account_id:&str,generation:u64)->Result<CodexCredentialSyncSettings,String>{worker::clear_recovery_epoch(account_id);enqueue_upload(account_id,generation)}

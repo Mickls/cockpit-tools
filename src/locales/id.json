@@ -6619,7 +6619,27 @@
       "desc": "Pulihkan otorisasi di perangkat pribadi Anda. Server hanya menyimpan data terenkripsi; pembaruan token rutin tidak diunggah.",
       "pending": "Unggahan tertunda: {{count}}",
       "enrollment": "Kode pendaftaran",
-      "enroll": "Daftarkan perangkat"
+      "enroll": "Daftarkan perangkat",
+      "server": "Server sinkronisasi",
+      "enable": "Aktifkan sinkronisasi",
+      "paired": "Perangkat dipasangkan",
+      "unpaired": "Belum dipasangkan atau menunggu persetujuan",
+      "invite": "Buat kode pemasangan",
+      "requests": "Permintaan pemasangan",
+      "approve": "Setujui pemasangan",
+      "account": "Pilih akun",
+      "uploaded": "Cadangan terenkripsi diunggah",
+      "recovered": "Kredensial dipulihkan; mulai ulang instans bila perlu",
+      "exhausted": "Tidak ada kredensial yang valid; percobaan selesai",
+      "upload": "Unggah cadangan",
+      "recover": "Pulihkan kredensial",
+      "devices": "Kelola perangkat",
+      "revoke": "Cabut perangkat",
+      "revoked": "Dicabut",
+      "exportRecovery": "Ekspor kode pemulihan",
+      "restoreRecovery": "Pulihkan dengan kode pemulihan",
+      "recoveryEnrollment": "Kode pendaftaran sekali pakai",
+      "recoveryCode": "Kode pemulihan offline"
     }
   },
   "codebuddy": {

@@ -2114,7 +2114,7 @@ async fn save_codex_oauth_tokens(
 
     let loaded =
         codex_account::load_account(&account.id).ok_or_else(|| "账号保存后无法读取".to_string())?;
-    if let Err(error) = crate::modules::codex_credential_sync::enqueue_upload(&loaded.id, loaded.token_generation) {
+    if let Err(error) = crate::modules::codex_credential_sync::authorization_succeeded(&loaded.id, loaded.token_generation) {
         logger::log_warn(&format!("Codex 凭据同步上传队列写入失败，保留本地授权: account_id={}, error={}", loaded.id, error));
     }
     if selected_proxy {

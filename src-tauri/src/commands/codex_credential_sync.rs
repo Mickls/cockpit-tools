@@ -20,3 +20,17 @@ pub async fn codex_credential_sync_create_invite()->Result<String,String>{crate:
 pub async fn codex_credential_sync_list_pairings()->Result<serde_json::Value,String>{crate::modules::codex_credential_sync::pairings().await}
 #[tauri::command]
 pub async fn codex_credential_sync_approve_pairing(pairing_id:String)->Result<(),String>{crate::modules::codex_credential_sync::approve(pairing_id).await}
+#[tauri::command]
+pub async fn codex_credential_sync_devices()->Result<serde_json::Value,String>{crate::modules::codex_credential_sync::devices().await}
+#[tauri::command]
+pub async fn codex_credential_sync_revoke(device_id:String)->Result<(),String>{crate::modules::codex_credential_sync::revoke(device_id).await}
+#[tauri::command]
+pub async fn codex_credential_sync_export_recovery()->Result<String,String>{crate::modules::codex_credential_sync::export_recovery().await}
+#[tauri::command]
+pub async fn codex_credential_sync_restore_recovery(code:String,recovery_code:String)->Result<CodexCredentialSyncSettings,String>{crate::modules::codex_credential_sync::restore_recovery(recovery_code,code).await}
+#[tauri::command]
+pub fn codex_credential_sync_accounts()->Vec<serde_json::Value>{
+    crate::modules::codex_account::load_account_index().accounts.into_iter().filter_map(|a|{
+        crate::modules::codex_account::credential_sync_snapshot(&a.id,false).ok().map(|_|serde_json::json!({"id":a.id,"email":a.email}))
+    }).collect()
+}

@@ -6572,7 +6572,27 @@
       "desc": "Obnova přihlášení mezi vlastními zařízeními. Server ukládá pouze šifrovaná data; běžné obnovení tokenu se neodesílá.",
       "pending": "Čekající nahrání: {{count}}",
       "enrollment": "Registrační kód",
-      "enroll": "Zaregistrovat zařízení"
+      "enroll": "Zaregistrovat zařízení",
+      "server": "Synchronizační server",
+      "enable": "Povolit synchronizaci",
+      "paired": "Zařízení spárováno",
+      "unpaired": "Nespárováno nebo čeká na schválení",
+      "invite": "Vytvořit párovací kód",
+      "requests": "Žádosti o párování",
+      "approve": "Schválit párování",
+      "account": "Vybrat účet",
+      "uploaded": "Šifrovaná záloha nahrána",
+      "recovered": "Přihlašovací údaje obnoveny; případně restartujte instanci",
+      "exhausted": "Žádné platné údaje; pokus ukončen",
+      "upload": "Nahrát zálohu",
+      "recover": "Obnovit údaje",
+      "devices": "Spravovat zařízení",
+      "revoke": "Odvolat zařízení",
+      "revoked": "Odvoláno",
+      "exportRecovery": "Exportovat kód obnovy",
+      "restoreRecovery": "Obnovit pomocí kódu obnovy",
+      "recoveryEnrollment": "Jednorázový registrační kód",
+      "recoveryCode": "Offline kód obnovy"
     }
   },
   "githubCopilot": {

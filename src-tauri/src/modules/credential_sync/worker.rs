@@ -15,6 +15,7 @@ static FLUSH:tokio::sync::Mutex<()>=tokio::sync::Mutex::const_new(());
 fn fingerprint(a:&CodexAccount)->String{format!("{:x}",Sha256::digest(serde_json::to_vec(&a.tokens).unwrap_or_default()))}
 fn account_key(a:&CodexAccount)->Result<String,String>{Ok(crypto::account_key(&sdk::keys(&sdk::secret()?)?,&accounts::credential_sync_identity(a)?))}
 fn status(id:&str,message:&str){let _=update_settings(|s|{if s.recovery_status.len()>128{s.recovery_status.clear();}s.recovery_status.insert(id.into(),message.into());});}
+pub(super) fn clear_recovery_epoch(id:&str){if let Ok(mut ids)=ATTEMPTS.lock(){ids.remove(id);}}
 pub fn start_worker(){if STARTED.swap(true,Ordering::SeqCst){return;}tauri::async_runtime::spawn(async{
  loop{
   if let Ok(settings)=load(){if settings.enabled&&!settings.server_url.is_empty(){
@@ -30,6 +31,8 @@ async fn cycle()->Result<(),String>{
  if !sdk::finish_pairing().await?{return Ok(());}
  sdk::call(Method::POST,"/v1/devices/heartbeat",None).await?;
  let _=sdk::devices().await?;
+ sdk::sync_rotation().await?;
+ sdk::refresh_recovery().await?;
  assist().await?;
  if let Some(pending)=load()?.pending_uploads.first().cloned(){
   let current=accounts::credential_sync_snapshot(&pending.account_id,false);
@@ -44,7 +47,7 @@ async fn cycle()->Result<(),String>{
 fn remove_queued(id:&str,generation:u64)->Result<(),String>{update_settings(|s|s.pending_uploads.retain(|p|p.account_id!=id||p.token_generation!=generation))?;Ok(())}
 async fn upload(account:&CodexAccount)->Result<(),String>{
  let key=account_key(account)?;let path=format!("/v1/accounts/{key}/backup");
- let revision=match sdk::call(Method::GET,&path,None).await{Ok(v)=>v["revision"].as_i64().ok_or("备份版本缺失")?,Err(e)if e.contains("HTTP 404")=>0,Err(e)=>return Err(e)};
+ let revision=match sdk::call(Method::GET,&format!("/v1/accounts/{key}/backup-meta"),None).await{Ok(v)=>v["revision"].as_i64().ok_or("备份版本缺失")?,Err(e)if e.contains("HTTP 404")=>0,Err(e)=>return Err(e)};
  let snapshot=accounts::credential_sync_snapshot(&account.id,false)?;
  if snapshot.token_generation!=account.token_generation||fingerprint(&snapshot)!=fingerprint(account){return Err("上传前本地凭据已变化".into());}
  let plaintext=serde_json::to_vec(&Credential{identity:accounts::credential_sync_identity(account)?,tokens:account.tokens.clone()}).map_err(|_|"凭据编码失败")?;
@@ -64,6 +67,13 @@ fn explicit_auth_error(error:&str)->bool{
 }
 struct Active(String);impl Drop for Active{fn drop(&mut self){if let Ok(mut ids)=ACTIVE.lock(){ids.remove(&self.0);}}}
 async fn recover(id:&str)->Result<bool,String>{
+ match tokio::time::timeout(Duration::from_secs(60),recover_inner(id)).await {
+  Ok(Ok(result))=>Ok(result),
+  Ok(Err(error))=>{status(id,"本轮恢复失败，等待重启或手动同步");Err(error)},
+  Err(_)=>{status(id,"本轮恢复超时，等待重启或手动同步");Err("凭据恢复超过总时限".into())}
+ }
+}
+async fn recover_inner(id:&str)->Result<bool,String>{
  if !sdk::ready(){return Ok(false);}
  {let mut ids=ACTIVE.lock().map_err(|_|"恢复锁不可用")?;if !ids.insert(id.into()){return Ok(false);}}
  let _active=Active(id.into());
@@ -89,6 +99,7 @@ async fn recover(id:&str)->Result<bool,String>{
    }
    let _=sdk::call(Method::POST,&format!("/v1/recoveries/{recovery}/result"),Some(json!({"task_id":task,"outcome":"candidate_rejected"}))).await;
   }}
+  if response["peers_pending"].as_i64()==Some(0){break;}
   tokio::time::sleep(Duration::from_secs(1)).await;
  }
  status(id,"正在检查服务器密文备份");
@@ -113,7 +124,7 @@ async fn try_candidate(original:&CodexAccount,key:&str,value:&Value,recovery:Opt
  accounts::credential_sync_probe(&candidate).await?;
  let saved=accounts::credential_sync_commit(original,&candidate).await?;
  // This path updates only the original account. It does not replay inference or tools.
- let _=accounts::sync_bound_oauth_consumers_after_reauth(&saved.id).await;Ok(())
+ tauri::async_runtime::spawn(async move {let _=accounts::sync_bound_oauth_consumers_after_reauth(&saved.id).await;});Ok(())
 }
 async fn assist()->Result<(),String>{
  let response=sdk::call(Method::GET,"/v1/devices/self/tasks",None).await?;

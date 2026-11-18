@@ -6572,7 +6572,27 @@
       "desc": "Recupera la autorización entre tus dispositivos. El servidor solo guarda datos cifrados; las renovaciones habituales de tokens no se suben.",
       "pending": "Cargas pendientes: {{count}}",
       "enrollment": "Código de registro",
-      "enroll": "Registrar dispositivo"
+      "enroll": "Registrar dispositivo",
+      "server": "Servidor de sincronización",
+      "enable": "Activar sincronización",
+      "paired": "Dispositivo vinculado",
+      "unpaired": "Sin vincular o pendiente de aprobación",
+      "invite": "Crear código de vinculación",
+      "requests": "Solicitudes de vinculación",
+      "approve": "Aprobar vinculación",
+      "account": "Seleccionar cuenta",
+      "uploaded": "Copia cifrada enviada",
+      "recovered": "Credenciales recuperadas; reinicia la instancia si hace falta",
+      "exhausted": "No hay credenciales válidas; intento finalizado",
+      "upload": "Subir copia",
+      "recover": "Recuperar credenciales",
+      "devices": "Administrar dispositivos",
+      "revoke": "Revocar dispositivo",
+      "revoked": "Revocado",
+      "exportRecovery": "Exportar código de recuperación",
+      "restoreRecovery": "Restaurar con código de recuperación",
+      "recoveryEnrollment": "Código de registro de un solo uso",
+      "recoveryCode": "Código de recuperación sin conexión"
     }
   },
   "githubCopilot": {

@@ -6572,7 +6572,27 @@
       "desc": "Recupere a autorização entre seus dispositivos. O servidor armazena apenas dados criptografados; renovações comuns de tokens não são enviadas.",
       "pending": "Uploads pendentes: {{count}}",
       "enrollment": "Código de inscrição",
-      "enroll": "Registrar dispositivo"
+      "enroll": "Registrar dispositivo",
+      "server": "Servidor de sincronização",
+      "enable": "Ativar sincronização",
+      "paired": "Dispositivo pareado",
+      "unpaired": "Não pareado ou aguardando aprovação",
+      "invite": "Criar código de pareamento",
+      "requests": "Solicitações de pareamento",
+      "approve": "Aprovar pareamento",
+      "account": "Selecionar conta",
+      "uploaded": "Backup criptografado enviado",
+      "recovered": "Credenciais recuperadas; reinicie a instância se necessário",
+      "exhausted": "Nenhuma credencial válida; tentativa encerrada",
+      "upload": "Enviar backup",
+      "recover": "Recuperar credenciais",
+      "devices": "Gerenciar dispositivos",
+      "revoke": "Revogar dispositivo",
+      "revoked": "Revogado",
+      "exportRecovery": "Exportar código de recuperação",
+      "restoreRecovery": "Restaurar com código de recuperação",
+      "recoveryEnrollment": "Código de inscrição único",
+      "recoveryCode": "Código de recuperação offline"
     }
   },
   "githubCopilot": {

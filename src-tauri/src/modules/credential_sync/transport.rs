@@ -38,3 +38,9 @@ pub async fn poll_enrollment(server:&str,code:&str,device_id:&str)->Result<Value
  if !response.status().is_success(){return Err(format!("配对状态 HTTP {}",response.status().as_u16()));}
  response.json().await.map_err(|_|"配对状态格式无效".into())
 }
+pub async fn recover_enrollment(server:&str,body:Value)->Result<Value,String>{
+ let response=client(server)?.post(format!("{}/v1/enroll/recover",server.trim_end_matches('/'))).json(&body).send().await.map_err(|_|"恢复登记请求失败")?;
+ if !response.status().is_success(){return Err(format!("恢复登记 HTTP {}",response.status().as_u16()));}
+ if response.content_length().is_some_and(|n|n>131072){return Err("恢复响应超过大小限制".into());}
+ response.json().await.map_err(|_|"恢复登记响应无效".into())
+}
