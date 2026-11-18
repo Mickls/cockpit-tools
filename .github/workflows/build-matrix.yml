@@ -165,19 +165,19 @@ jobs:
     permissions:
       contents: read
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         include:
           - label: macOS arm64
             cache_target: "macos-aarch64"
             icon: "🍎"
-            platform: macos-latest
+            platform: macos-15-intel
             target: aarch64-apple-darwin
             executable: target/aarch64-apple-darwin/ci/cockpit-tools
           - label: macOS x64
             cache_target: "macos-x86_64"
             icon: "🍎"
-            platform: macos-latest
+            platform: macos-15-intel
             target: x86_64-apple-darwin
             executable: target/x86_64-apple-darwin/ci/cockpit-tools
           - label: Ubuntu 22.04 x64
@@ -231,6 +231,7 @@ jobs:
         if: matrix.platform == 'ubuntu-22.04'
         working-directory: src-tauri
         run: |
+          cargo test credential_sync --lib -- --test-threads=1
           cargo test instance_configuration_save --lib
           cargo test quick_config_catalog_only_context_preservation --lib
           cargo test claude_desktop_gateway --lib --locked
@@ -248,6 +249,20 @@ jobs:
       - name: "✅ Verify executable"
         shell: bash
         run: test -f "${{ matrix.executable }}"
+
+      - name: Verify macOS target architecture
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+          EXECUTABLE: ${{ matrix.executable }}
+        run: |
+          set -euo pipefail
+          case "$TARGET" in
+            aarch64-apple-darwin) lipo "$EXECUTABLE" -verify_arch arm64 ;;
+            x86_64-apple-darwin) lipo "$EXECUTABLE" -verify_arch x86_64 ;;
+            *) exit 1 ;;
+          esac
 
       - name: "🧾 Publish build summary"
         if: always()

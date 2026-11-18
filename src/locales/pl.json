@@ -6566,6 +6566,33 @@
       "more": "Pokaż więcej",
       "loadFailed": "Nie udało się wczytać historii",
       "officialUnavailable": "Oficjalna historia resetów jest niedostępna dla tego konta"
+    },
+    "credentialSync": {
+      "title": "Synchronizacja danych logowania Codex",
+      "desc": "Przywracaj autoryzację na swoich urządzeniach. Serwer przechowuje tylko zaszyfrowane dane; zwykłe odświeżenia tokenów nie są wysyłane.",
+      "pending": "Oczekujące wysyłanie: {{count}}",
+      "enrollment": "Kod rejestracji",
+      "enroll": "Zarejestruj urządzenie",
+      "server": "Serwer synchronizacji",
+      "enable": "Włącz synchronizację",
+      "paired": "Urządzenie sparowane",
+      "unpaired": "Nie sparowano lub oczekuje na zgodę",
+      "invite": "Utwórz kod parowania",
+      "requests": "Żądania parowania",
+      "approve": "Zatwierdź parowanie",
+      "account": "Wybierz konto",
+      "uploaded": "Zaszyfrowana kopia wysłana",
+      "recovered": "Dane przywrócone; w razie potrzeby uruchom instancję ponownie",
+      "exhausted": "Brak prawidłowych danych; próba zakończona",
+      "upload": "Wyślij kopię",
+      "recover": "Przywróć dane",
+      "devices": "Zarządzaj urządzeniami",
+      "revoke": "Unieważnij urządzenie",
+      "revoked": "Unieważniono",
+      "exportRecovery": "Eksportuj kod odzyskiwania",
+      "restoreRecovery": "Przywróć z kodu odzyskiwania",
+      "recoveryEnrollment": "Jednorazowy kod rejestracji",
+      "recoveryCode": "Kod odzyskiwania offline"
     }
   },
   "githubCopilot": {
